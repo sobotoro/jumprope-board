@@ -5,16 +5,21 @@
        { id: "m2", time: "화요일 2교시", a: "5-5", b: "5-4" },
        { id: "m3", time: "화요일 5교시", a: "5-3", b: "5-2" },
   ];
-  const BOARDS = [
-    { event: "long", gender: "M", title: "오래뛰기", g: "남학생" },
-    { event: "long", gender: "F", title: "오래뛰기", g: "여학생" },
-    { event: "double", gender: "M", title: "2단 뛰기", g: "남학생" },
-    { event: "double", gender: "F", title: "2단 뛰기", g: "여학생" },
+  const EVENTS = [
+    { event: "long", title: "오래뛰기", unit: "오래 버틴 시간" },
+    { event: "double", title: "2단 뛰기", unit: "횟수" },
   ];
+  const GENDERS = [{ gender: "M", g: "남학생" }, { gender: "F", g: "여학생" }];
 
   const state = { rope8: {}, dodge: {}, solo: [], edit: false, signedIn: false };
   let rdb = null, auth = null;
   const $ = (id) => document.getElementById(id);
+  let fitQueued = false;
+  function scheduleFit() {
+    if (fitQueued) return;
+    fitQueued = true;
+    requestAnimationFrame(() => { fitQueued = false; fit(); });
+  }
   const num = (v) => (typeof v === "number" && isFinite(v) ? v : null);
   const show = (v) => (v === null ? "—" : String(v));
   const fmtRec = (event, c) => {
@@ -29,14 +34,16 @@
   const cellRefs = {};
   CLASSES.forEach((cls) => {
     const tr = document.createElement("tr");
+    const cr = document.createElement("td");
+    cr.className = "rank"; tr.appendChild(cr);
     const c0 = document.createElement("td");
     c0.className = "cls"; c0.textContent = cls; tr.appendChild(c0);
-    cellRefs[cls] = { tr };
-    ["b1", "b2", "boysBest", "g1", "g2", "girlsBest", "total", "rank"].forEach((key) => {
+    cellRefs[cls] = { tr, rank: { td: cr } };
+    ["b1", "b2", "boysBest", "g1", "g2", "girlsBest", "total"].forEach((key) => {
       const td = document.createElement("td");
       const label = KEYS.find((k) => k[0] === key);
       if (label) {
-        td.className = "num";
+        td.className = "num att";
         const span = document.createElement("span");
         const input = document.createElement("input");
         input.type = "number"; input.min = "0"; input.max = "9999"; input.inputMode = "numeric";
@@ -47,7 +54,7 @@
         td.append(span, input);
         cellRefs[cls][key] = { td, span, input };
       } else {
-        td.className = key === "total" ? "total" : key === "rank" ? "rank" : key === "boysBest" ? "best b" : "best g";
+        td.className = key === "total" ? "total" : key === "boysBest" ? "best b" : "best g";
         cellRefs[cls][key] = { td };
       }
       tr.appendChild(td);
@@ -73,20 +80,24 @@
         c.span.textContent = show(val);
         c.span.hidden = state.edit;
         c.input.hidden = !state.edit;
-        c.td.classList.toggle("dim", val === null && !state.edit);
+        c.td.classList.toggle("empty", val === null && !state.edit);
         if (document.activeElement !== c.input) c.input.value = val === null ? "" : val;
       });
-      ref.boysBest.td.textContent = show(r.bB);
-      ref.girlsBest.td.textContent = show(r.gB);
-      ref.total.td.textContent = show(r.total);
+      [["boysBest", r.bB], ["girlsBest", r.gB], ["total", r.total]].forEach(([k, val]) => {
+        ref[k].td.textContent = show(val);
+        ref[k].td.classList.toggle("empty", val === null);
+      });
       const rank = r.total === null ? null : 1 + CLASSES.filter((c) => rows[c].total !== null && rows[c].total > r.total).length;
       ref.rank.td.textContent = "";
       const badge = document.createElement("span");
-      badge.className = "rank-badge" + (rank && rank <= 3 ? ` r${rank}` : "");
+      badge.className = "rank-badge" + (rank ? (rank <= 3 ? ` r${rank}` : "") : " none");
       badge.textContent = rank ? `${rank}위` : "—";
       ref.rank.td.appendChild(badge);
       ref.tr.classList.toggle("top1", rank === 1);
     });
+    const anyData = CLASSES.some((c) => rows[c].total !== null);
+    $("rope8-empty").hidden = anyData || state.edit;
+    scheduleFit();
   }
 
   async function saveRope8(cls, key, raw) {
@@ -101,12 +112,19 @@
     const box = $("matches");
     box.textContent = "";
     let done = 0;
+    const nextId = MATCHES.find((m) => !state.dodge[m.id]?.winner)?.id;
     MATCHES.forEach((m) => {
       const w = state.dodge[m.id]?.winner || null;
       const isDraw = w === "draw";
+      const isNext = m.id === nextId;
       if (w) done++;
-      const card = document.createElement("div"); card.className = "match";
+      const card = document.createElement("div"); card.className = "match" + (isNext && !state.edit ? " next" : "");
+      const head = document.createElement("div"); head.className = "match-head";
       const t = document.createElement("div"); t.className = "match-time"; t.textContent = m.time;
+      const st = document.createElement("span");
+      st.className = "st" + (!w && isNext ? " next" : "");
+      st.textContent = w ? "종료" : isNext ? "다음 경기" : "경기 전";
+      head.append(t, st);
       const vs = document.createElement("div"); vs.className = "vs";
       const team = (cls) => {
         const el = document.createElement(state.edit ? "button" : "div");
@@ -117,19 +135,17 @@
         }
         el.className = "team" + (isDraw ? " draw" : w === cls ? " win" : w ? " lose" : "");
         const name = document.createElement("span"); name.textContent = cls;
-        const lab = document.createElement("small");
-        lab.textContent = isDraw ? "무승부" : w === cls ? "승리" : state.edit && !w ? "눌러서 승리 표시" : "";
-        el.append(name, lab);
+        el.appendChild(name);
+        const labText = isDraw ? "무승부" : w === cls ? "승리" : state.edit && !w ? "눌러서 승리 표시" : "";
+        if (labText) { const lab = document.createElement("small"); lab.textContent = labText; el.appendChild(lab); }
         return el;
       };
       const mid = document.createElement("div"); mid.className = "vs-mid"; mid.textContent = "VS";
       vs.append(team(m.a), mid, team(m.b));
-      const foot = document.createElement("div"); foot.className = "match-foot";
-      const st = document.createElement("span");
-      st.textContent = isDraw ? "무승부" : w ? `${w} 승리` : "경기 전";
-      foot.appendChild(st);
+      card.append(head, vs);
       if (state.edit) {
-        const acts = document.createElement("div"); acts.className = "foot-actions";
+        const foot = document.createElement("div"); foot.className = "match-foot";
+        const acts = foot;
         const drawBtn = document.createElement("button");
         drawBtn.type = "button"; drawBtn.className = "draw-btn"; drawBtn.textContent = "무승부";
         drawBtn.setAttribute("aria-pressed", String(isDraw));
@@ -141,12 +157,12 @@
           reset.addEventListener("click", () => setWinner(m.id, null));
           acts.appendChild(reset);
         }
-        foot.appendChild(acts);
+        card.appendChild(foot);
       }
-      card.append(t, vs, foot);
       box.appendChild(card);
     });
     $("dodge-hint").textContent = state.edit ? "이긴 반을 누르거나 무승부를 누르세요" : `${done} / ${MATCHES.length} 경기 완료`;
+    scheduleFit();
   }
 
   async function setWinner(id, winner) {
@@ -159,16 +175,21 @@
   function renderBoards() {
     const box = $("boards");
     box.textContent = "";
-    BOARDS.forEach((b) => {
+    EVENTS.forEach((ev) => {
+      const group = document.createElement("div"); group.className = "event";
+      const gh = document.createElement("h3"); gh.textContent = ev.title;
+      const gu = document.createElement("small"); gu.textContent = ev.unit; gh.appendChild(gu);
+      const pair = document.createElement("div"); pair.className = "pair";
+      group.append(gh, pair);
+      box.appendChild(group);
+    GENDERS.forEach((gd) => {
+      const b = { ...ev, ...gd };
       const list = state.solo
         .filter((r) => r.event === b.event && r.gender === b.gender && typeof r.count === "number")
         .sort((x, y) => y.count - x.count)
         .slice(0, 10);
-      const card = document.createElement("div"); card.className = `board ev-${b.event} gd-${b.gender}`;
-      const h = document.createElement("h3");
-      const ht = document.createElement("span"); ht.textContent = b.title;
-      const hg = document.createElement("span"); hg.className = "g"; hg.textContent = b.g;
-      h.append(ht, hg);
+      const card = document.createElement("div"); card.className = `board gd-${b.gender}`;
+      const h = document.createElement("h4"); h.textContent = b.g;
       card.appendChild(h);
       if (!list.length) {
         const e = document.createElement("div"); e.className = "empty"; e.textContent = "아직 기록이 없습니다.";
@@ -179,6 +200,7 @@
         list.forEach((r, i) => {
           if (r.count !== prev) { rank = i + 1; prev = r.count; }
           const li = document.createElement("li");
+          if (rank === 1) li.className = "first";
           const rr = document.createElement("span"); rr.className = "r"; rr.textContent = `${rank}`;
           const who = document.createElement("span"); who.className = "who"; who.textContent = r.name || "이름 없음";
           const c = document.createElement("span"); c.textContent = r.cls || ""; who.appendChild(c);
@@ -201,8 +223,10 @@
         });
         card.appendChild(ol);
       }
-      box.appendChild(card);
+      pair.appendChild(card);
     });
+    });
+    scheduleFit();
   }
 
   const fCls = $("f-cls");
@@ -285,7 +309,54 @@
     setEdit(false);
   });
 
-  function renderAll() { renderRope8(); renderDodge(); renderBoards(); }
+  function renderAll() { applyCompact(); renderRope8(); renderDodge(); renderBoards(); }
+
+  // ---------- 휴대폰: 8자 줄넘기 표를 핵심 열만 ----------
+  const narrow = window.matchMedia("(max-width: 640px)");
+  function applyCompact() {
+    const on = narrow.matches && !state.edit && !document.body.classList.contains("tv");
+    document.body.classList.toggle("compact", on);
+    $("th-boys").colSpan = on ? 1 : 3;
+    $("th-girls").colSpan = on ? 1 : 3;
+  }
+  narrow.addEventListener?.("change", applyCompact);
+
+  // ---------- 전광판 모드: 화면 가로·세로에 맞춰 확대 ----------
+  const wrap = $("wrap");
+  const tvBtn = $("tv-toggle");
+  function fit() {
+    if (!document.body.classList.contains("tv")) { wrap.style.zoom = ""; wrap.style.width = ""; return; }
+    // 화면 비율에 맞는 설계 폭을 찾은 뒤(가로로 긴 TV면 더 넓게), 가로·세로 모두 들어가게 확대
+    const iw = window.innerWidth, ih = window.innerHeight;
+    wrap.style.zoom = 1;
+    let w = 1600;
+    for (let i = 0; i < 3; i++) {
+      wrap.style.width = w + "px";
+      w = Math.max(1400, Math.min(2400, Math.round(wrap.scrollHeight * iw / ih)));
+    }
+    wrap.style.width = w + "px";
+    wrap.style.zoom = Math.min(iw / w, ih / wrap.scrollHeight);
+  }
+  function setTv(on) {
+    if (on && state.edit) setEdit(false);
+    document.body.classList.toggle("tv", on);
+    tvBtn.textContent = on ? "전광판 모드 끝내기" : "전광판 모드";
+    applyCompact();
+    fit();
+  }
+  tvBtn.addEventListener("click", () => {
+    const on = !document.body.classList.contains("tv");
+    setTv(on);
+    if (on) document.documentElement.requestFullscreen?.().catch(() => {});
+    else if (document.fullscreenElement) document.exitFullscreen?.();
+  });
+  document.addEventListener("fullscreenchange", () => {
+    if (!document.fullscreenElement && document.body.classList.contains("tv")) setTv(false);
+  });
+  window.addEventListener("resize", fit);
+  document.fonts?.ready.then(fit);
+  if (new URLSearchParams(location.search).has("tv")) setTv(true);
+
   renderAll();
 
   // ---------- Firebase 연결 ----------

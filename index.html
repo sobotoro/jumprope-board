@@ -7,22 +7,19 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Chakra+Petch:wght@600;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
 <style>
-/* Layout: a stadium scoreboard — dark panel wall, amber LED digits; jump rope in orange, dodgeball in blue (matches the poster). Single dark look by choice. */
+/* Layout: a stadium scoreboard — dark panel wall, amber LED digits.
+   Color rules: amber = the number that matters (학급 점수, 1위, 다음 경기). cyan/pink = 남/여. green = 승리. Everything else is neutral. */
 :root {
   --bg: #0A0F1E;
   --panel: #111A30;
   --panel-2: #17223D;
   --line: #2A3658;
   --fg: #EEF2FF;
+  --soft: #C9D2EA;
   --muted: #A3AECB;
+  --faint: #4C5878;
   --led: #FFC93D;
-  --jump: #FF8A3D;
-  --jump-soft: rgba(255,138,61,.14);
-  --dodge: #5AA2FF;
-  --dodge-soft: rgba(90,162,255,.14);
   --win: #3DDC97;
-  --long: #A3E635;
-  --double: #C49BFF;
   --boy: #4FC3F7;
   --girl: #FF80BF;
   --danger: #FF6B6B;
@@ -32,15 +29,17 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+html, body { margin: 0; }
 body {
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-body);
-  font-size: 15px;
+  font-size: 17px;
   line-height: 1.5;
 }
+[hidden] { display: none !important; }
 .wrap {
-  max-width: 1480px;
+  max-width: 1680px;
   margin: 0 auto;
   padding-block: 24px 40px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
@@ -49,139 +48,161 @@ body {
   flex-direction: column;
   gap: 20px;
 }
+
+/* ---------- 머리글 ---------- */
 header.top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  border-bottom: 3px solid var(--led);
-  padding-bottom: 14px;
+  display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px;
+  border-bottom: 3px solid var(--led); padding-bottom: 14px;
 }
-.eyebrow { color: var(--muted); font-weight: 700; letter-spacing: .08em; font-size: 14px; }
-h1 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: clamp(30px, 5vw, 56px); line-height: 1.05; text-wrap: balance; }
+.eyebrow { color: var(--soft); font-weight: 700; letter-spacing: .04em; font-size: 17px; }
+h1 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: clamp(32px, 4.6vw, 64px); line-height: 1.05; text-wrap: balance; }
 h1 .led { color: var(--led); }
 .top-right { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-.live { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); font-weight: 700; }
+.live { display: inline-flex; align-items: center; gap: 8px; font-size: 16px; color: var(--muted); font-weight: 700; }
 .live .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
 .live.on .dot { background: var(--win); box-shadow: 0 0 10px var(--win); }
 button { font: inherit; cursor: pointer; }
 .btn {
-  min-height: 40px; padding: 8px 16px; border-radius: 10px;
+  min-height: 42px; padding: 8px 16px; border-radius: 10px; font-size: 16px;
   border: 1px solid var(--line); background: var(--panel-2); color: var(--fg); font-weight: 700;
 }
 .btn:hover { border-color: var(--muted); }
 .btn.primary { background: var(--led); color: #1A1300; border-color: var(--led); }
 :focus-visible { outline: 3px solid var(--led); outline-offset: 2px; }
 
+/* ---------- 패널 공통 ---------- */
 .grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 20px; }
 @media (max-width: 1000px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.panel-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 14px; }
+h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1.1; display: flex; align-items: center; gap: 10px; }
+h2 .tag { font-family: var(--font-body); font-size: 16px; font-weight: 900; padding: 3px 12px; border-radius: 999px; background: var(--soft); color: var(--bg); }
+.note { color: var(--muted); font-size: 16px; }
 
-.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.panel-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
-h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 28px; line-height: 1.1; display: flex; align-items: center; gap: 10px; }
-h2 .tag { font-family: var(--font-body); font-size: 13px; font-weight: 900; padding: 3px 10px; border-radius: 999px; color: #0A0F1E; }
-.jump h2 .tag { background: var(--jump); }
-.dodge h2 .tag { background: var(--dodge); }
-.note { color: var(--muted); font-size: 13px; }
-
-/* 8자 줄넘기 table */
+/* ---------- 8자 줄넘기 표 ---------- */
 .table-box { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; min-width: 640px; }
-th, td { padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--line); }
-thead th { color: var(--muted); font-size: 13px; font-weight: 700; }
-thead tr.group th { font-size: 14px; color: var(--fg); }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; min-width: 680px; }
+th, td { padding: 12px 8px; text-align: center; border-bottom: 1px solid var(--line); }
+thead th { color: var(--muted); font-size: 16px; font-weight: 700; }
+thead tr.group th { font-size: 17px; color: var(--fg); }
 thead tr.group th.boys { color: var(--boy); border-bottom: 3px solid var(--boy); }
 thead tr.group th.girls { color: var(--girl); border-bottom: 3px solid var(--girl); }
-td.best.b { background: rgba(79,195,247,.13); color: var(--boy); }
-td.best.g { background: rgba(255,128,191,.13); color: var(--girl); }
-td.cls { font-family: var(--font-display); font-size: 26px; text-align: left; padding-left: 10px; white-space: nowrap; }
-td.num { font-family: var(--font-num); font-size: 26px; font-weight: 700; color: var(--led); }
-td.num.dim { color: var(--muted); font-size: 22px; }
-td.best { font-family: var(--font-num); font-size: 24px; font-weight: 700; color: var(--fg); background: var(--jump-soft); }
-td.total { font-family: var(--font-num); font-size: 32px; font-weight: 700; color: var(--led); }
-td.rank { width: 70px; }
-.rank-badge { display: inline-grid; place-items: center; min-width: 46px; height: 36px; padding: 0 8px; border-radius: 10px; font-weight: 900; font-size: 16px; background: var(--panel-2); color: var(--muted); }
+th.c-cls, td.cls { text-align: left; padding-left: 12px; }
+td.cls { font-family: var(--font-display); font-size: 28px; white-space: nowrap; }
+td.rank { width: 84px; }
+/* 1·2차: 참고용이라 차분하게 */
+td.num { font-family: var(--font-num); font-size: 23px; font-weight: 600; color: var(--soft); }
+/* 최고 기록: 성별 색 */
+td.best { font-family: var(--font-num); font-size: 28px; font-weight: 700; }
+td.best.b { background: rgba(79,195,247,.10); color: var(--boy); }
+td.best.g { background: rgba(255,128,191,.10); color: var(--girl); }
+/* 학급 점수: 이 표에서 유일한 노란 숫자 */
+td.total { font-family: var(--font-num); font-size: 42px; font-weight: 700; color: var(--led); line-height: 1; }
+/* 기록 없음: 모두 같은 흐린 회색 */
+td.empty, td.num.empty, td.best.empty, td.total.empty { color: var(--faint); font-size: 22px; font-weight: 600; }
+.rank-badge { display: inline-grid; place-items: center; min-width: 56px; height: 40px; padding: 0 8px; border-radius: 10px; font-weight: 900; font-size: 18px; background: var(--panel-2); color: var(--muted); }
+.rank-badge.none { background: transparent; color: var(--faint); }
 .rank-badge.r1 { background: var(--led); color: #1A1300; }
 .rank-badge.r2 { background: #D7DEEE; color: #121A30; }
 .rank-badge.r3 { background: #E2A26B; color: #2A1503; }
-tr.top1 td { background: rgba(255,201,61,.07); }
+/* 1위 줄: 왼쪽 금색 막대 + 점수 발광 */
+tr.top1 td:first-child { box-shadow: inset 5px 0 0 var(--led); }
+tr.top1 td.cls { color: var(--led); }
+tr.top1 td.total { text-shadow: 0 0 18px rgba(255,201,61,.55); }
 td input {
-  width: 74px; min-height: 40px; text-align: center; font-family: var(--font-num); font-size: 20px; font-weight: 700;
-  background: var(--bg); color: var(--led); border: 1px solid var(--line); border-radius: 8px;
+  width: 74px; min-height: 42px; text-align: center; font-family: var(--font-num); font-size: 20px; font-weight: 700;
+  background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 8px;
 }
 td input:focus { border-color: var(--led); }
+.empty-hint { border: 1px dashed var(--line); border-radius: 12px; padding: 14px; text-align: center; color: var(--muted); font-size: 17px; font-weight: 700; }
+/* 휴대폰: 1·2차 열을 숨기고 핵심 열만 */
+body.compact table { min-width: 0; }
+body.compact .att { display: none; }
+body.compact td.cls { font-size: 22px; }
+body.compact td.best { font-size: 24px; }
+body.compact td.total { font-size: 32px; }
+body.compact th, body.compact td { padding: 10px 4px; }
+body.compact td.rank { width: 64px; }
+body.compact .rank-badge { min-width: 48px; height: 36px; font-size: 16px; }
 
-/* 피구 */
-.matches { display: flex; flex-direction: column; gap: 12px; }
-.match { border: 1px solid var(--line); border-radius: 14px; background: var(--panel-2); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
-.match-time { font-size: 13px; font-weight: 900; color: var(--dodge); letter-spacing: .04em; }
+/* ---------- 피구 ---------- */
+.matches { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+.match { flex: 1; justify-content: center; border: 1px solid var(--line); border-radius: 14px; background: var(--panel-2); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.match.next { border-color: var(--led); box-shadow: 0 0 0 1px var(--led); }
+.match-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.match-time { font-size: 16px; font-weight: 900; color: var(--soft); letter-spacing: .02em; }
+.st { font-size: 15px; font-weight: 900; padding: 2px 12px; border-radius: 999px; color: var(--muted); border: 1px solid var(--line); }
+.st.next { background: var(--led); border-color: var(--led); color: #1A1300; }
 .vs { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: stretch; gap: 10px; }
 .team {
-  min-height: 72px; border-radius: 12px; border: 2px solid var(--line); background: var(--panel);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  font-family: var(--font-display); font-size: 34px; line-height: 1; color: var(--fg);
+  min-height: 76px; border-radius: 12px; border: 2px solid var(--line); background: var(--panel);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  font-family: var(--font-display); font-size: 36px; line-height: 1; color: var(--fg);
 }
-.team small { font-family: var(--font-body); font-size: 12px; font-weight: 900; letter-spacing: .06em; min-height: 16px; }
+.team small { font-family: var(--font-body); font-size: 15px; font-weight: 900; letter-spacing: .04em; color: var(--muted); }
 .team.win { border-color: var(--win); background: rgba(61,220,151,.12); }
 .team.win small { color: var(--win); }
-.team.lose { opacity: .45; }
-.team.draw { border-color: var(--led); background: rgba(255,201,61,.10); }
-.team.draw small { color: var(--led); }
-.draw-btn { min-height: 36px; padding: 4px 12px; border-radius: 8px; border: 1px solid var(--led); background: transparent; color: var(--led); font-weight: 900; }
-.draw-btn[aria-pressed="true"] { background: var(--led); color: #1A1300; }
-.foot-actions { display: flex; gap: 8px; align-items: center; }
-button.team:hover { border-color: var(--dodge); }
-.vs-mid { align-self: center; font-weight: 900; color: var(--dodge); font-size: 18px; }
-.match-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); min-height: 24px; }
-.link-btn { background: none; border: none; color: var(--muted); text-decoration: underline; padding: 4px; }
+.team.lose { opacity: .6; }
+.team.draw { border-style: dashed; border-color: var(--soft); background: transparent; }
+.team.draw small { color: var(--soft); }
+button.team:hover { border-color: var(--soft); }
+.vs-mid { align-self: center; font-weight: 900; color: var(--muted); font-size: 18px; }
+.match-foot { display: flex; justify-content: flex-end; align-items: center; gap: 8px; min-height: 24px; }
+.draw-btn { min-height: 38px; padding: 4px 14px; border-radius: 8px; border: 1px dashed var(--soft); background: transparent; color: var(--soft); font-weight: 900; font-size: 15px; }
+.draw-btn[aria-pressed="true"] { background: var(--soft); color: var(--bg); border-style: solid; }
+.link-btn { background: none; border: none; color: var(--muted); text-decoration: underline; padding: 4px; font-size: 15px; }
 
-/* 개인 줄넘기 */
-.boards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
-@media (max-width: 1100px) { .boards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 560px) { .boards { grid-template-columns: minmax(0, 1fr); } }
-.board { --ev: var(--long); --gd: var(--boy); background: var(--panel-2); border: 1px solid var(--line); border-top: 6px solid var(--ev); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.board.ev-double { --ev: var(--double); }
+/* ---------- 개인 줄넘기 ---------- */
+.boards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+@media (max-width: 1000px) { .boards { grid-template-columns: minmax(0, 1fr); } }
+.event { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.event h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 26px; line-height: 1.1; display: flex; align-items: baseline; gap: 10px; }
+.event h3 small { font-family: var(--font-body); font-size: 16px; font-weight: 700; color: var(--muted); }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 560px) { .pair { grid-template-columns: minmax(0, 1fr); } }
+.board { --gd: var(--boy); background: var(--panel-2); border: 1px solid var(--line); border-top: 5px solid var(--gd); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .board.gd-F { --gd: var(--girl); }
-.board h3 { margin: 0; font-size: 19px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--ev); }
-.board h3 .g { font-size: 13px; font-weight: 900; padding: 3px 10px; border-radius: 999px; background: var(--gd); color: #0A0F1E; }
-.board li .who { border-left: 4px solid var(--gd); padding-left: 8px; }
-.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px; font-weight: 700; color: var(--muted); }
-.legend span { display: inline-flex; align-items: center; gap: 6px; }
-.legend i { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
-.board ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.board li { display: grid; grid-template-columns: 34px minmax(0,1fr) auto auto; align-items: center; gap: 8px; padding: 6px 4px; border-bottom: 1px dashed var(--line); }
-.board li .r { font-weight: 900; color: var(--muted); text-align: center; }
-.board li:first-child .r { color: var(--led); }
-.board li .who { min-width: 0; overflow-wrap: anywhere; font-weight: 700; }
-.board li .who span { color: var(--muted); font-weight: 500; font-size: 13px; margin-left: 4px; }
-.board li .cnt { font-family: var(--font-num); font-weight: 700; font-size: 22px; color: var(--led); font-variant-numeric: tabular-nums; }
-.board .empty { color: var(--muted); font-size: 13px; padding: 10px 2px; }
-.del { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--danger); font-weight: 900; }
+.board h4 { margin: 0; font-size: 18px; font-weight: 900; color: var(--gd); }
+.board ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.board li { display: grid; grid-template-columns: 30px minmax(0,1fr) auto auto; align-items: center; gap: 8px; padding: 7px 2px; border-bottom: 1px dashed var(--line); }
+.board li .r { font-weight: 900; font-size: 18px; color: var(--muted); text-align: center; }
+.board li.first .r { color: var(--led); }
+.board li .who { min-width: 0; overflow-wrap: anywhere; font-weight: 700; font-size: 18px; }
+.board li .who span { color: var(--muted); font-weight: 500; font-size: 16px; margin-left: 6px; }
+.board li .cnt { font-family: var(--font-num); font-weight: 700; font-size: 24px; color: var(--soft); font-variant-numeric: tabular-nums; }
+.board li.first .cnt { color: var(--led); }
+.board .empty { color: var(--faint); font-size: 16px; font-weight: 700; padding: 10px 2px; }
+.del { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--danger); font-weight: 900; }
 
+/* ---------- 입력 폼 ---------- */
 form.add { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; background: var(--panel-2); border: 1px dashed var(--led); border-radius: 14px; padding: 12px; }
-form.add label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; color: var(--muted); }
+form.add label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; font-weight: 700; color: var(--muted); }
 form.add select, form.add input {
-  min-height: 40px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); padding: 6px 10px; font: inherit; font-size: 15px;
+  min-height: 42px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); padding: 6px 10px; font: inherit; font-size: 16px;
 }
-form.add input[type="number"] { width: 100px; font-family: var(--font-num); font-weight: 700; color: var(--led); }
+form.add input[type="number"] { width: 100px; font-family: var(--font-num); font-weight: 700; }
 form.add input#f-name { width: 130px; }
-.msg { font-size: 13px; color: var(--muted); min-height: 20px; }
+.msg { font-size: 15px; color: var(--muted); min-height: 20px; }
 .msg.err { color: var(--danger); }
-.notice { border: 1px solid var(--danger); color: var(--fg); background: rgba(255,107,107,.08); border-radius: 12px; padding: 10px 14px; font-size: 14px; }
-@media (prefers-reduced-motion: no-preference) {
-  td.num, td.total, .board li .cnt { transition: color .3s; }
-}
-
+.notice { border: 1px solid var(--danger); color: var(--fg); background: rgba(255,107,107,.08); border-radius: 12px; padding: 10px 14px; font-size: 16px; }
 .login { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--panel); border: 1px solid var(--led); border-radius: 14px; padding: 12px 14px; }
 .login label { font-weight: 700; }
-.login input { min-height: 40px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); padding: 6px 10px; font: inherit; width: 200px; max-width: 100%; }
-html, body { margin: 0; }
-[hidden] { display: none !important; }
+.login input { min-height: 42px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); padding: 6px 10px; font: inherit; width: 200px; max-width: 100%; }
+@media (prefers-reduced-motion: no-preference) {
+  td.total, .board li .cnt { transition: color .3s; }
+}
+
+/* ---------- 전광판 모드 (TV·프로젝터) ---------- */
+/* 1600px 기준으로 그린 뒤 화면 가로·세로에 맞춰 통째로 확대/축소 */
+body.tv { overflow: hidden; }
+body.tv .wrap { max-width: none; width: 1600px; margin: 0 auto; }
+body.tv #edit-toggle, body.tv #logout, body.tv #login, body.tv #add-form { display: none !important; }
+body.tv #tv-toggle { opacity: .35; }
+body.tv #tv-toggle:hover, body.tv #tv-toggle:focus-visible { opacity: 1; }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="wrap" id="wrap">
   <header class="top">
     <div>
       <div class="eyebrow">2026학년도 5학년 스포츠클럽주간 · 11월 9일(월) / 10일(화)</div>
@@ -189,6 +210,7 @@ html, body { margin: 0; }
     </div>
     <div class="top-right">
       <span class="live" id="live"><span class="dot"></span><span id="live-text">연결 중</span></span>
+      <button class="btn" id="tv-toggle" type="button">전광판 모드</button>
       <button class="btn" id="logout" type="button" hidden>로그아웃</button>
       <button class="btn" id="edit-toggle" type="button" hidden>기록 입력하기</button>
     </div>
@@ -204,50 +226,46 @@ html, body { margin: 0; }
     <div class="msg" id="login-msg" role="status"></div>
   </form>
 
-
   <div class="grid">
-    <section class="panel jump" aria-labelledby="h-rope8">
+    <section class="panel" aria-labelledby="h-rope8">
       <div class="panel-head">
-        <h2 id="h-rope8"><span class="tag">월</span>8자 줄넘기</h2>
-        <span class="note">학급 점수 = 남학생 최고 기록 + 여학생 최고 기록</span>
+        <h2 id="h-rope8"><span class="tag">11/9 월</span>8자 줄넘기</h2>
+        <span class="note">학급 점수 = 남학생 최고 + 여학생 최고</span>
       </div>
       <div class="table-box">
         <table>
           <thead>
             <tr class="group">
-              <th rowspan="2" scope="col" style="text-align:left;padding-left:10px">학급</th>
-              <th colspan="3" class="boys" scope="colgroup">남학생</th>
-              <th colspan="3" class="girls" scope="colgroup">여학생</th>
-              <th rowspan="2" scope="col">학급 점수</th>
               <th rowspan="2" scope="col">순위</th>
+              <th rowspan="2" scope="col" class="c-cls">학급</th>
+              <th colspan="3" class="boys" id="th-boys" scope="colgroup">남학생</th>
+              <th colspan="3" class="girls" id="th-girls" scope="colgroup">여학생</th>
+              <th rowspan="2" scope="col">학급 점수</th>
             </tr>
             <tr>
-              <th scope="col">1차</th><th scope="col">2차</th><th scope="col">최고</th>
-              <th scope="col">1차</th><th scope="col">2차</th><th scope="col">최고</th>
+              <th scope="col" class="att">1차</th><th scope="col" class="att">2차</th><th scope="col">최고</th>
+              <th scope="col" class="att">1차</th><th scope="col" class="att">2차</th><th scope="col">최고</th>
             </tr>
           </thead>
           <tbody id="rope8-body"></tbody>
         </table>
       </div>
+      <div class="empty-hint" id="rope8-empty" hidden>11월 9일(월) 경기가 끝나면 기록이 표시됩니다</div>
     </section>
 
-    <section class="panel dodge" aria-labelledby="h-dodge">
+    <section class="panel" aria-labelledby="h-dodge">
       <div class="panel-head">
-        <h2 id="h-dodge"><span class="tag">화</span>반 대항 피구</h2>
+        <h2 id="h-dodge"><span class="tag">11/10 화</span>반 대항 피구</h2>
         <span class="note" id="dodge-hint">경기 결과</span>
       </div>
       <div class="matches" id="matches"></div>
     </section>
   </div>
 
-  <section class="panel jump" aria-labelledby="h-solo">
+  <section class="panel" aria-labelledby="h-solo">
     <div class="panel-head">
-         <div style="display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px"><h2 id="h-solo"><span class="tag">개인</span>개인 줄넘기 순위</h2><span class="note">반별로 최고 기록을 세운 학생 1명씩만 입력합니다</span></div>      <div class="legend" aria-label="색상 안내">
-        <span><i style="background: var(--long)"></i>오래뛰기</span>
-        <span><i style="background: var(--double)"></i>2단 뛰기</span>
-        <span><i style="background: var(--boy); border-radius: 50%"></i>남학생</span>
-        <span><i style="background: var(--girl); border-radius: 50%"></i>여학생</span>
-      </div>
+      <h2 id="h-solo">개인 줄넘기 순위</h2>
+      <span class="note">반별로 최고 기록을 세운 학생 1명씩만 올라갑니다</span>
     </div>
     <form class="add" id="add-form" hidden>
       <label for="f-event">종목
@@ -283,7 +301,6 @@ html, body { margin: 0; }
     <div class="boards" id="boards"></div>
   </section>
 </div>
-
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
